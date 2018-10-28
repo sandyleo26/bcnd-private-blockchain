@@ -25,17 +25,19 @@ class Block {
 
 class Blockchain {
   constructor() {
-    this.addGenesisBlock()
   }
 
   async addGenesisBlock() {
-    await this.addBlock(new Block("First block in the chain - Genesis block"));
+    const genesisBlock = new Block("First block in the chain - Genesis block");
+    genesisBlock.time = new Date().getTime().toString().slice(0, -3);
+    genesisBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
+    await DB.addDataToLevelDB(JSON.stringify(genesisBlock));
   }
 
   // Add new block
   async addBlock(newBlock) {
     // Block height
-    newBlock.height = this.getBlockHeight();
+    newBlock.height = await this.getBlockHeight();
     if (newBlock.height === 0) {
       await this.addGenesisBlock();
       newBlock.height++;
@@ -56,20 +58,20 @@ class Blockchain {
 
   // Get block height
   async getBlockHeight() {
-    await DB.getBlockCount();
+    return await DB.getBlockCount();
   }
 
   // get block
   async getBlock(blockHeight) {
     // return object as a single string
     // return JSON.parse(JSON.stringify(this.chain[blockHeight]));
-    return await JSON.parse(DB.getLevelDBData(blockHeight));
+    return JSON.parse(await DB.getLevelDBData(blockHeight));
   }
 
   // validate block
-  validateBlock(blockHeight) {
+  async validateBlock(blockHeight) {
     // get block object
-    let block = this.getBlock(blockHeight);
+    let block = await this.getBlock(blockHeight);
     // get block hash
     let blockHash = block.hash;
     // remove block hash to test block integrity
@@ -86,9 +88,9 @@ class Blockchain {
   }
 
   // Validate blockchain
-  validateChain() {
+  async validateChain() {
     let errorLog = [];
-    const chainLength = this.getBlockHeight()
+    const chainLength = await this.getBlockHeight()
     for (var i = 0; i < chainLength - 1; i++) {
       // validate block
       if (!this.validateBlock(i)) errorLog.push(i);
