@@ -30,7 +30,7 @@ class Blockchain {
   async addGenesisBlock() {
     const genesisBlock = new Block("First block in the chain - Genesis block");
     genesisBlock.time = new Date().getTime().toString().slice(0, -3);
-    genesisBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
+    genesisBlock.hash = SHA256(JSON.stringify(genesisBlock)).toString();
     await DB.addDataToLevelDB(JSON.stringify(genesisBlock));
   }
 
@@ -46,7 +46,8 @@ class Blockchain {
     newBlock.time = new Date().getTime().toString().slice(0, -3);
     // previous block hash
     if (newBlock.height > 0) {
-      newBlock.previousBlockHash = await this.getBlock(newBlock.height-1).hash;
+      const previousBlock = await this.getBlock(newBlock.height-1);
+      newBlock.previousBlockHash = previousBlock.hash;
     }
     // Block hash with SHA256 using newBlock and converting to a string
     newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
@@ -96,8 +97,8 @@ class Blockchain {
       if (!this.validateBlock(i)) errorLog.push(i);
       // compare blocks hash link
 
-      let blockHash = this.getBlock(i).hash;
-      let previousHash = this.getBlock(i+1).previousBlockHash;
+      let blockHash = (await this.getBlock(i)).hash;
+      let previousHash = (await this.getBlock(i+1)).previousBlockHash;
       if (blockHash !== previousHash) {
         errorLog.push(i);
       }
