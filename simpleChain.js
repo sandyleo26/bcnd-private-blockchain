@@ -123,4 +123,7 @@ class Blockchain {
   }
   
   theLoop(i)
+  setTimeout(() => {
+    myBlockChain.validateChain();
+  }, 12000);
 })(0);
