@@ -25,18 +25,26 @@ class Block {
 
 class Blockchain {
   constructor() {
-    this.addBlock(new Block("First block in the chain - Genesis block"));
+    this.addGenesisBlock()
+  }
+
+  async addGenesisBlock() {
+    await this.addBlock(new Block("First block in the chain - Genesis block"));
   }
 
   // Add new block
   async addBlock(newBlock) {
     // Block height
     newBlock.height = this.getBlockHeight();
+    if (newBlock.height === 0) {
+      await this.addGenesisBlock();
+      newBlock.height++;
+    }
     // UTC timestamp
     newBlock.time = new Date().getTime().toString().slice(0, -3);
     // previous block hash
     if (newBlock.height > 0) {
-      newBlock.previousBlockHash = this.getBlock(newBlock.height-1).hash;
+      newBlock.previousBlockHash = await this.getBlock(newBlock.height-1).hash;
     }
     // Block hash with SHA256 using newBlock and converting to a string
     newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
