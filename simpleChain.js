@@ -25,6 +25,10 @@ class Block {
 
 class Blockchain {
   constructor() {
+    this.getBlockHeight()
+      .then(height => {
+        if (height === -1) this.addGenesisBlock();
+      });
   }
 
   async addGenesisBlock() {
@@ -38,10 +42,10 @@ class Blockchain {
   async addBlock(newBlock) {
     // Block height
     newBlock.height = await this.getBlockHeight();
-    if (newBlock.height === 0) {
+    if (newBlock.height === -1) {
       await this.addGenesisBlock();
-      newBlock.height++;
     }
+    newBlock.height = (await this.getBlockHeight()) + 1;
     // UTC timestamp
     newBlock.time = new Date().getTime().toString().slice(0, -3);
     // previous block hash
@@ -92,7 +96,7 @@ class Blockchain {
   async validateChain() {
     let errorLog = [];
     const chainLength = await this.getBlockHeight()
-    for (var i = 0; i < chainLength - 1; i++) {
+    for (var i = 0; i <= chainLength - 1; i++) {
       // validate block
       if (!this.validateBlock(i)) errorLog.push(i);
       // compare blocks hash link
@@ -118,7 +122,6 @@ class Blockchain {
     setTimeout(function () {
         let blockTest = new Block("Test Block - " + (i + 1));
         myBlockChain.addBlock(blockTest).then((result) => {
-            console.log('added block', i+1);
             i++;
             if (i < 10) theLoop(i);
         });
